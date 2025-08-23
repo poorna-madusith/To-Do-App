@@ -15,8 +15,6 @@ public class TaskController : ControllerBase
 
     private readonly TodoDbContext _context;
 
-
-
     public TaskController(TodoDbContext context)
     {
         _context = context;
@@ -24,15 +22,19 @@ public class TaskController : ControllerBase
 
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<TaskItem>>> GetTasks(string userId)
+    public async Task<ActionResult<IEnumerable<TaskItem>>> GetTasks()
     {
 
         try
         {
-            if (string.IsNullOrWhiteSpace(userId))
+
+            var userId = HttpContext.Items["UserId"]?.ToString();
+
+            if (userId == null)
             {
-                return BadRequest("UserId is required");
+                return Unauthorized("User not authenticated");
             }
+
             var tasks = await _context.Tasks.Where(t => t.UserId == userId).ToListAsync();
 
             if (tasks == null || !tasks.Any())
@@ -52,14 +54,17 @@ public class TaskController : ControllerBase
     }
 
     [HttpGet("{id}")]
-    public async Task<ActionResult<TaskItem>> GetTask(int id, string userId)
+    public async Task<ActionResult<TaskItem>> GetTask(int id)
     {
 
         try
         {
-            if (string.IsNullOrWhiteSpace(userId))
+
+            var userId = HttpContext.Items["UserId"]?.ToString();
+
+            if (userId == null)
             {
-                return BadRequest("UserId and Id are required");
+                return Unauthorized("User not authenticated");
             }
 
             var task = await _context.Tasks.FirstOrDefaultAsync(t => t.Id == id && t.UserId == userId);
@@ -84,14 +89,25 @@ public class TaskController : ControllerBase
     {
         try
         {
+
+            var userId = HttpContext.Items["UserId"]?.ToString();
+
+            if (userId == null)
+            {
+                return Unauthorized("User not authenticated");
+            }
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
+            if (task.UserId != userId)
+            {
+                return BadRequest("Invalid UserId");
+            }
 
             _context.Tasks.Add(task);
             await _context.SaveChangesAsync();
-            return CreatedAtAction(nameof(GetTask), new { id = task.Id, userId = task.UserId }, task);
+            return CreatedAtAction(nameof(GetTask), new { id = task.Id, UserId = userId }, task);
         }
         catch (Exception e)
         {
@@ -106,39 +122,48 @@ public class TaskController : ControllerBase
     {
         try
         {
+            var userId = HttpContext.Items["UserId"]?.ToString();
+            if (userId == null)
+                return Unauthorized("User not authenticated");
+
             if (id != task.Id)
-            {
                 return BadRequest("Id mismatch");
-            }
 
-            var exsisting = await _context.Tasks.FirstOrDefaultAsync(t => t.Id == id && t.UserId == task.UserId);
-            if (exsisting == null)
-            {
+            var existing = await _context.Tasks.FirstOrDefaultAsync(t => t.Id == id && t.UserId == userId);
+            if (existing == null)
                 return NotFound("Task not found!");
-            }
 
-            _context.Entry(task).State = EntityState.Modified;
+            // Update only allowed fields
+            existing.Title = task.Title;
+            existing.Description = task.Description;
+            existing.IsCompleted = task.IsCompleted;
+            existing.Category = task.Category;
+            existing.Tags = task.Tags;
+            existing.Priority = task.Priority;
+
             await _context.SaveChangesAsync();
+
             return NoContent();
-
-
         }
         catch (Exception e)
         {
-            Console.WriteLine($"Error while updating : {e.Message}");
-            return StatusCode(500, " Internal Server Error");
+            Console.WriteLine($"Error while updating: {e.Message}");
+            return StatusCode(500, "Internal Server Error");
         }
     }
 
 
     [HttpDelete("{id}")]
-    public async Task<IActionResult> DeleteTask(int id, string userId)
+    public async Task<IActionResult> DeleteTask(int id)
     {
         try
         {
-            if (string.IsNullOrWhiteSpace(userId))
+
+            var userId = HttpContext.Items["UserId"]?.ToString();
+
+            if (userId == null)
             {
-                return BadRequest("UserId and Id are required");
+                return Unauthorized("User not authenticated");
             }
 
             var exsisting = await _context.Tasks.FirstOrDefaultAsync(t => t.Id == id && t.UserId == userId);
@@ -161,13 +186,16 @@ public class TaskController : ControllerBase
 
 
     [HttpPatch("{id}/complete")]
-    public async Task<IActionResult> PatchTask(int id, string userId, [FromBody] bool IsCompleted)
+    public async Task<IActionResult> PatchTask(int id, [FromBody] bool IsCompleted)
     {
         try
         {
-            if (string.IsNullOrWhiteSpace(userId))
+
+            var userId = HttpContext.Items["UserId"]?.ToString();
+
+            if (userId == null)
             {
-                return BadRequest("UserId and Id are required");
+                return Unauthorized("User not authenticated");
             }
 
             var task = await _context.Tasks.FirstOrDefaultAsync(t => t.Id == id && t.UserId == userId);

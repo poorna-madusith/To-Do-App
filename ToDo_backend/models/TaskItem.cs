@@ -17,7 +17,7 @@ public class TaskItem
     public string UserId { get; set; } = string.Empty;
 
     [Required(ErrorMessage = "Category is required")]
-    public string? Category { get; set; }
+    public string Category { get; set; } = string.Empty;
     public List<string>? Tags { get; set; }
 
     [Range(0, 5, ErrorMessage = "Priority must be between 0 and 5")]
