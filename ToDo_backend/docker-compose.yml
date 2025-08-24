@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  todo-backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: todo-backend-app
+    ports:
+      - "8080:8080"
+      - "8081:8081"
+    environment:
+      # ASP.NET Core environment
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:8080
+      # Aiven MySQL connection string
+      - ConnectionStrings__DefaultConnection=Server=${AIVEN_HOST};Port=${AIVEN_PORT};Database=${AIVEN_DB};User=${AIVEN_USER};Password=${AIVEN_PASSWORD};
+      # Optional: Firebase path (used inside app)
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/firebase-adminsdk.json
+    volumes:
+      # Mount Firebase service account as read-only
+      - ./firebase-adminsdk.json:/app/firebase-adminsdk.json:ro
+    networks:
+      - todo-network
+    restart: unless-stopped
+
+networks:
+  todo-network:
+    driver: bridge

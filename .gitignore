@@ -5,6 +5,17 @@
 
 # dotenv files
 .env
+.env.*
+!.env.example
+
+# Firebase Admin SDK files (contains sensitive credentials)
+firebase-adminsdk.json
+**/firebase-adminsdk.json
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
 
 # User-specific files
 *.rsuser

@@ -76,9 +76,11 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-
-
-app.UseHttpsRedirection();
+// Only use HTTPS redirection in development, not in Docker containers
+if (!app.Environment.IsProduction())
+{
+    app.UseHttpsRedirection();
+}
 app.UseCors("AllowFrontend");
 app.UseAuthentication();
 app.UseAuthorization();
