@@ -20,15 +20,19 @@ jobs:
         
     - name: Restore dependencies
       run: dotnet restore
+      working-directory: ./ToDo_backend
       
     - name: Build
       run: dotnet build --no-restore --configuration Release
+      working-directory: ./ToDo_backend
       
     - name: Test
       run: dotnet test --no-build --verbosity normal --configuration Release
+      working-directory: ./ToDo_backend
 
     - name: Publish
       run: dotnet publish --configuration Release --output ./publish
+      working-directory: ./ToDo_backend
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4
