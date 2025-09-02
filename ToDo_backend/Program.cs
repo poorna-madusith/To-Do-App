@@ -3,22 +3,36 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using ToDo_backend.context;
 using ToDo_backend.Helpers;
+using DotNetEnv; // ✅ Added for .env support
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Validate connection string
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+// ✅ Load environment variables from .env file
+DotNetEnv.Env.Load();
+
+// ✅ Build connection string dynamically from .env variables
+var connectionString = $"server={Environment.GetEnvironmentVariable("AIVEN_HOST")};" +
+                       $"port={Environment.GetEnvironmentVariable("AIVEN_PORT")};" +
+                       $"database={Environment.GetEnvironmentVariable("AIVEN_DB")};" +
+                       $"user={Environment.GetEnvironmentVariable("AIVEN_USER")};" +
+                       $"password={Environment.GetEnvironmentVariable("AIVEN_PASSWORD")};" +
+                       $"SslMode=Required;";
+
+// ✅ Validate connection string
 if (string.IsNullOrEmpty(connectionString))
 {
-    throw new InvalidOperationException("Database connection string 'DefaultConnection' is not configured.");
+    throw new InvalidOperationException("Database connection string is not configured properly.");
 }
 
-builder.Services.AddDbContext<TodoDbContext>(option =>
-    option.UseMySql(connectionString,
+// ✅ Configure DbContext with MySQL
+builder.Services.AddDbContext<TodoDbContext>(options =>
+    options.UseMySql(connectionString,
     new MySqlServerVersion(new Version(8, 0, 21))));
 
+// ✅ Initialize Firebase Helper
 FireBaseHelper.Initialize();
 
+// ✅ Configure JWT Authentication
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -53,37 +67,37 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-
-builder.Services.AddCors(Options =>
+// ✅ Allow CORS for frontend
+builder.Services.AddCors(options =>
 {
-    Options.AddPolicy("AllowFrontend", policy =>
-    policy.WithOrigins("http://localhost:3000")
-    .AllowAnyHeader()
-    .AllowAnyMethod());
+    options.AddPolicy("AllowFrontend", policy =>
+        policy.WithOrigins("http://localhost:3000")
+              .AllowAnyHeader()
+              .AllowAnyMethod());
 });
 
-
+// ✅ Add Controllers, Swagger & API Explorer
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-
+// ✅ Enable Swagger in Development
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
-// Only use HTTPS redirection in development, not in Docker containers
+// ✅ Use HTTPS redirection only in development
 if (!app.Environment.IsProduction())
 {
     app.UseHttpsRedirection();
 }
+
 app.UseCors("AllowFrontend");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 app.Run();
-
