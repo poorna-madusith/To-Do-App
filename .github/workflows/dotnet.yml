@@ -1,4 +1,4 @@
-name: .NET CI/CD
+name: Full Stack CI/CD
 
 on:
   push:
@@ -7,7 +7,8 @@ on:
     branches: [ "main" ]
 
 jobs:
-  build:
+  backend:
+    name: Backend Build & Test
     runs-on: ubuntu-latest
 
     steps:
@@ -34,8 +35,45 @@ jobs:
       run: dotnet publish --configuration Release --output ./publish
       working-directory: ./ToDo_backend
 
-    - name: Upload artifact
+    - name: Upload Backend Artifact
       uses: actions/upload-artifact@v4
       with:
         name: todo-backend
-        path: ./publish
+        path: ./ToDo_backend/publish
+
+  frontend:
+    name: Frontend Build & Test
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        
+    - name: Setup pnpm
+      uses: pnpm/action-setup@v2
+      with:
+        version: 8
+        
+    - name: Install dependencies
+      run: pnpm install
+      working-directory: ./todo-frontend
+      
+    - name: Lint
+      run: pnpm lint
+      working-directory: ./todo-frontend
+      
+    - name: Build
+      run: pnpm build
+      working-directory: ./todo-frontend
+      
+    - name: Upload Frontend Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: todo-frontend
+        path: ./todo-frontend/.next
+
+  
