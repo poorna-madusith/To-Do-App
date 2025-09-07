@@ -30,13 +30,7 @@ public class UserController : ControllerBase
                 return BadRequest(ModelState);
             }
 
-            var firebaseUid = HttpContext.Items["UserId"]?.ToString();
-            if (firebaseUid == null)
-            {
-                return Unauthorized("User not authenticated");
-            }
-
-            var existingUser = await _context.Users.FirstOrDefaultAsync(u => u.UserId == firebaseUid);
+            var existingUser = await _context.Users.FirstOrDefaultAsync(u => u.UserId == user.UserId);
 
             if (existingUser != null)
             {
@@ -45,7 +39,7 @@ public class UserController : ControllerBase
 
             var newuser = new User
             {
-                UserId = firebaseUid,
+                UserId = user.UserId,
                 FirstName = user.FirstName,
                 LastName = user.LastName,
                 Email = user.Email

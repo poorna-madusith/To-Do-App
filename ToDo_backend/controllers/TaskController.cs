@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using ToDo_backend.context;
@@ -10,6 +11,7 @@ namespace ToDo_backend.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class TaskController : ControllerBase
 {
 
