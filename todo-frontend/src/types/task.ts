@@ -4,7 +4,7 @@ export interface Task {
   description: string;
   isCompleted: boolean;
   category: string;
-  tags: string[];
+  tags: string[] | null;
   priority: number;
   userId: string;
   createdAt: string; // ISO Date string from backend
