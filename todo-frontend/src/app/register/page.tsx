@@ -1,5 +1,4 @@
 "use client";
-import api from "@/lib/axios";
 import { auth } from "@/lib/firebase";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { useRouter } from "next/navigation";
@@ -80,7 +79,7 @@ export default function RegisterPage() {
           }
         );
         if (res.status === 200) {
-          router.push("/dashboard");
+          router.push("/signin");
           toast.success("Registered successfully");
         } else if (res.status === 400) {
           toast.error("User already exists");
@@ -107,7 +106,7 @@ export default function RegisterPage() {
             Enter your details below to signup for your account
           </CardDescription>
           <CardAction>
-            <Button variant="link" onClick={() => router.push("/login")}>
+            <Button variant="link" onClick={() => router.push("/signin")}>
               Sign in
             </Button>
           </CardAction>
