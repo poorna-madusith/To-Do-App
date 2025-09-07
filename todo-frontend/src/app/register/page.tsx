@@ -1,4 +1,6 @@
 "use client";
+
+
 import { auth } from "@/lib/firebase";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { useRouter } from "next/navigation";
