@@ -1,7 +1,7 @@
 "use client";
 
-import { auth } from "@/lib/firebase";
-import { signInWithEmailAndPassword } from "firebase/auth";
+import { auth, googleProvider } from "@/lib/firebase";
+import { signInWithEmailAndPassword, signInWithPopup } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
 import toast from "react-hot-toast";
@@ -18,14 +18,18 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FirebaseError } from "firebase/app";
+import axios from "axios";
 
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>(
     {}
   );
+    const api = process.env.NEXT_PUBLIC_API_URL;
+
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -48,11 +52,69 @@ export default function LoginPage() {
     return Object.keys(newErrors).length === 0;
   };
 
+
+  const handleGoogleSignIn = async () => {
+    try{
+      setLoading(true);
+      const result = await signInWithPopup(auth, googleProvider);
+      const user  = result.user;
+
+      const res = await axios.post(`${api}/api/User`,{
+        UserId: user.uid,
+        Email: user.email,
+        FirstName: user.displayName?.split(" ")[0] || "",
+        LastName: user.displayName?.split(" ")[1] || "",
+      })
+      
+      if(res.status === 200){
+        toast.success("Logged in successfully");
+        router.push("/dashboard");
+      }else if(res.status === 400){
+        toast.error("User already exists");
+      }
+
+
+      
+    }catch(error : unknown){
+      if(error instanceof FirebaseError){
+        console.log("Error code:", error.code); 
+        console.log("Error message:", error.message);
+      }
+
+      if(error instanceof FirebaseError){
+        switch (error.code) {
+          case "auth/popup-closed-by-user":
+            toast.error("Sign-in cancelled");
+            break;
+          case "auth/popup-blocked":
+            toast.error("Popup blocked. Please allow popups and try again");
+            break;
+          case "auth/cancelled-popup-request":
+            toast.error("Sign-in cancelled");
+            break;
+          case "auth/network-request-failed":
+            toast.error("Network error. Please check your connection");
+            break;
+          case "auth/too-many-requests":
+            toast.error("Too many attempts. Please try again later");
+            break;
+          default:
+            toast.error("Failed to sign in with Google. Please try again");
+            console.log("Unhandled Google sign-in error code:", error.code);
+            break;
+        }
+      }
+    } finally {
+      setLoading(false);
+    }
+  }
+
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
+    setLoading(true);
     if (!validateForm()) {
       toast.error("Please fix the errors in the form");
+      setLoading(false);
       return;
     }
 
@@ -153,11 +215,11 @@ export default function LoginPage() {
                   )}
                 </div>
                 <CardFooter className="flex-col gap-2 px-0 pt-6">
-                  <Button type="submit" className="w-full">
-                    Login
+                  <Button type="submit" className="w-full" disabled={loading}>
+                    {loading ? "Signing in..." : "Sign In"}
                   </Button>
-                  <Button variant="outline" className="w-full" type="button">
-                    Login with Google
+                  <Button variant="outline" className="w-full" type="button" disabled={loading} onClick={handleGoogleSignIn}>
+                    {loading ? "Signing in..." : "Sign in with Google"}
                   </Button>
                 </CardFooter>
               </div>
