@@ -248,14 +248,6 @@ export default function RegisterPage() {
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? "Signing up..." : "Signup"}
               </Button>
-              <Button
-                variant="outline"
-                className="w-full"
-                type="button"
-                disabled={loading}
-              >
-                Signup with Google
-              </Button>
             </CardFooter>
           </form>
         </CardContent>

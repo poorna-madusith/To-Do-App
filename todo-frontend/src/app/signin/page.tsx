@@ -5,6 +5,7 @@ import { signInWithEmailAndPassword, signInWithPopup } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
 import toast from "react-hot-toast";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -237,7 +238,20 @@ export default function LoginPage() {
                   disabled={loading}
                   onClick={handleGoogleSignIn}
                 >
-                  {loading ? "Signing in..." : "Sign in with Google"}
+                  {loading ? (
+                    "Signing in..."
+                  ) : (
+                    <div className="flex items-center justify-center gap-2">
+                      <Image 
+                        src="/google.svg" 
+                        alt="Google" 
+                        width={20} 
+                        height={20}
+                        className="w-5 h-5"
+                      />
+                      Sign in with Google
+                    </div>
+                  )}
                 </Button>
               </CardFooter>
             </div>
