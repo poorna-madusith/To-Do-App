@@ -28,8 +28,7 @@ export default function LoginPage() {
   const [errors, setErrors] = useState<{ email?: string; password?: string }>(
     {}
   );
-    const api = process.env.NEXT_PUBLIC_API_URL;
-
+  const api = process.env.NEXT_PUBLIC_API_URL;
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -52,36 +51,44 @@ export default function LoginPage() {
     return Object.keys(newErrors).length === 0;
   };
 
-
   const handleGoogleSignIn = async () => {
-    try{
+    try {
       setLoading(true);
       const result = await signInWithPopup(auth, googleProvider);
-      const user  = result.user;
+      const user = result.user;
 
-      const res = await axios.post(`${api}/api/User`,{
-        UserId: user.uid,
-        Email: user.email,
-        FirstName: user.displayName?.split(" ")[0] || "",
-        LastName: user.displayName?.split(" ")[1] || "",
-      })
-      
-      if(res.status === 200){
-        toast.success("Logged in successfully");
-        router.push("/dashboard");
-      }else if(res.status === 400){
-        toast.error("User already exists");
+      try {
+        // Try to create new user
+        const res = await axios.post(`${api}/api/User`, {
+          UserId: user.uid,
+          Email: user.email,
+          FirstName: user.displayName?.split(" ")[0] || "",
+          LastName: user.displayName?.split(" ")[1] || "",
+        });
+        if (res.status === 201) {
+          toast.success("Logged in successfully");
+          router.push("/dashboard");
+        }
+      } catch (err: unknown) {
+        // If user already exists (400 status), still proceed with login
+        if (
+          axios.isAxiosError(err) &&
+          err.response?.status === 400 &&
+          err.response.data === "User already exists"
+        ) {
+          toast.success("Logged in successfully");
+          router.push("/dashboard");
+        } else {
+          // If it's another type of error, show it
+          toast.error("Failed to complete sign-in process");
+          console.error("Error during sign-in:", err);
+        }
       }
-
-
-      
-    }catch(error : unknown){
-      if(error instanceof FirebaseError){
-        console.log("Error code:", error.code); 
+    } catch (error: unknown) {
+      if (error instanceof FirebaseError) {
+        console.log("Error code:", error.code);
         console.log("Error message:", error.message);
-      }
 
-      if(error instanceof FirebaseError){
         switch (error.code) {
           case "auth/popup-closed-by-user":
             toast.error("Sign-in cancelled");
@@ -103,11 +110,14 @@ export default function LoginPage() {
             console.log("Unhandled Google sign-in error code:", error.code);
             break;
         }
+      } else {
+        toast.error("An unexpected error occurred. Please try again");
+        console.error("Unexpected error:", error);
       }
     } finally {
       setLoading(false);
     }
-  }
+  };
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -156,76 +166,84 @@ export default function LoginPage() {
             console.log("Unhandled error code:", error.code);
             break;
         }
+        setLoading(false);
       } else {
         // For unexpected errors
         toast.error("Something went wrong. Please try again");
         console.error("Unexpected error:", error);
+        setLoading(false);
       }
     }
   };
 
-  return(
+  return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-        <Card className="w-full max-w-sm">
-          <CardHeader>
-            <CardTitle>Login to your account</CardTitle>
-            <CardDescription>
-              Enter your email below to login to your account
-            </CardDescription>
-            <CardAction>
-              <Button variant="link" onClick={() => router.push("/register")}>
-                Sign Up
-              </Button>
-            </CardAction>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleLogin}>
-              <div className="flex flex-col gap-6">
-                <div className="grid gap-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    name="email"
-                    type="email"
-                    placeholder="m@example.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className={errors.email ? "border-red-500" : ""}
-                  />
-                  {errors.email && (
-                    <span className="text-red-500 text-sm">{errors.email}</span>
-                  )}
-                </div>
-                <div className="grid gap-2">
-                  <div className="flex items-center">
-                    <Label htmlFor="password">Password</Label>
-                  </div>
-                  <Input
-                    id="password"
-                    name="password"
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className={errors.password ? "border-red-500" : ""}
-                  />
-                  {errors.password && (
-                    <span className="text-red-500 text-sm">
-                      {errors.password}
-                    </span>
-                  )}
-                </div>
-                <CardFooter className="flex-col gap-2 px-0 pt-6">
-                  <Button type="submit" className="w-full" disabled={loading}>
-                    {loading ? "Signing in..." : "Sign In"}
-                  </Button>
-                  <Button variant="outline" className="w-full" type="button" disabled={loading} onClick={handleGoogleSignIn}>
-                    {loading ? "Signing in..." : "Sign in with Google"}
-                  </Button>
-                </CardFooter>
+      <Card className="w-full max-w-sm">
+        <CardHeader>
+          <CardTitle>Login to your account</CardTitle>
+          <CardDescription>
+            Enter your email below to login to your account
+          </CardDescription>
+          <CardAction>
+            <Button variant="link" onClick={() => router.push("/register")}>
+              Sign Up
+            </Button>
+          </CardAction>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleLogin}>
+            <div className="flex flex-col gap-6">
+              <div className="grid gap-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  placeholder="m@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className={errors.email ? "border-red-500" : ""}
+                />
+                {errors.email && (
+                  <span className="text-red-500 text-sm">{errors.email}</span>
+                )}
               </div>
-            </form>
-          </CardContent>
-        </Card>
-      </div>
+              <div className="grid gap-2">
+                <div className="flex items-center">
+                  <Label htmlFor="password">Password</Label>
+                </div>
+                <Input
+                  id="password"
+                  name="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className={errors.password ? "border-red-500" : ""}
+                />
+                {errors.password && (
+                  <span className="text-red-500 text-sm">
+                    {errors.password}
+                  </span>
+                )}
+              </div>
+              <CardFooter className="flex-col gap-2 px-0 pt-6">
+                <Button type="submit" className="w-full" disabled={loading}>
+                  {loading ? "Signing in..." : "Sign In"}
+                </Button>
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  type="button"
+                  disabled={loading}
+                  onClick={handleGoogleSignIn}
+                >
+                  {loading ? "Signing in..." : "Sign in with Google"}
+                </Button>
+              </CardFooter>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+    </div>
   );
 }

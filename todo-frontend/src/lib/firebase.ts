@@ -13,3 +13,10 @@ const firebaseconfig = {
 const app = initializeApp(firebaseconfig);
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
+
+// Configure Google provider for better UX
+googleProvider.addScope('profile');
+googleProvider.addScope('email');
+googleProvider.setCustomParameters({
+  prompt: 'select_account'
+});
