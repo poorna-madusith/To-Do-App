@@ -1,9 +1,8 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
 using ToDo_backend.context;
-using ToDo_backend.Helpers;
-using DotNetEnv; // ✅ Added for .env support
+using DotNetEnv; // For .env support
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -26,46 +25,23 @@ if (string.IsNullOrEmpty(connectionString))
 
 // ✅ Configure DbContext with MySQL
 builder.Services.AddDbContext<TodoDbContext>(options =>
-    options.UseMySql(connectionString,
-    new MySqlServerVersion(new Version(8, 0, 21))));
+    options.UseMySql(connectionString, new MySqlServerVersion(new Version(8, 0, 21))));
 
-// ✅ Initialize Firebase Helper
-FireBaseHelper.Initialize();
-
-// ✅ Configure JWT Authentication
-builder.Services.AddAuthentication(options =>
-{
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-})
-.AddJwtBearer(options =>
-{
-    options.Events = new JwtBearerEvents
+// ✅ Configure JWT Authentication for Firebase
+var firebaseProjectId = Environment.GetEnvironmentVariable("FIREBASE_PROJECT_ID") ?? "to-do-app-85a37";
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
     {
-        OnMessageReceived = context =>
+        options.Authority = $"https://securetoken.google.com/{firebaseProjectId}";
+        options.TokenValidationParameters = new TokenValidationParameters
         {
-            if (context.Request.Headers.ContainsKey("Authorization"))
-            {
-                var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
-                context.Token = token;
-            }
-            return Task.CompletedTask;
-        },
-        OnTokenValidated = async context =>
-        {
-            var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
-            try
-            {
-                var decodedToken = await FireBaseHelper.VerifyToken(token);
-                context.HttpContext.Items["UserId"] = decodedToken.Uid;
-            }
-            catch
-            {
-                context.Fail("Unauthorized");
-            }
-        }
-    };
-});
+            ValidateIssuer = true,
+            ValidIssuer = $"https://securetoken.google.com/{firebaseProjectId}",
+            ValidateAudience = true,
+            ValidAudience = firebaseProjectId,
+            ValidateLifetime = true
+        };
+    });
 
 // ✅ Allow CORS for frontend
 builder.Services.AddCors(options =>
@@ -97,7 +73,11 @@ if (!app.Environment.IsProduction())
 }
 
 app.UseCors("AllowFrontend");
+
+// ✅ Enable authentication & authorization
 app.UseAuthentication();
 app.UseAuthorization();
+
 app.MapControllers();
+
 app.Run();
