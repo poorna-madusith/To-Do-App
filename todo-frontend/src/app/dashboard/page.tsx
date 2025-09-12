@@ -7,6 +7,7 @@ import { useEffect, useState, useCallback } from "react";
 import toast from "react-hot-toast";
 import { signOut } from "firebase/auth";
 import { useRouter } from "next/navigation";
+import AddEditModal from "@/components/AddEditModal";
 
 export default function Dashboard() {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -149,6 +150,13 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+
+      <AddEditModal 
+        isOpen={openModel}
+        onClose={handleModalClose}
+        onTaskSaved={handleTaskSaved}
+        task={editingTask}
+      />
     </ProtectedRoute>
   );
 }

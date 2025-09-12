@@ -1,79 +1,261 @@
 import { auth } from "@/lib/firebase";
 import { Task } from "@/types/task";
+import axios from "axios";
 import { use, useEffect, useState } from "react";
-
-
-
-
+import toast from "react-hot-toast";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { on } from "events";
 interface AddEditModalProps {
-    isOpen: boolean;
-    onClose: () => void;
-    task: Task | null;
-    onTaskSaved: () => void;
+  isOpen: boolean;
+  onClose: () => void;
+  task: Task | null;
+  onTaskSaved: () => void;
 }
 
+export default function AddEditModal({
+  isOpen,
+  onClose,
+  task,
+  onTaskSaved,
+}: AddEditModalProps) {
+  const [formData, setFormData] = useState({
+    title: "",
+    description: "",
+    isCompleted: false,
+    category: "",
+    tags: [] as string[],
+    priority: 0,
+    userId: "",
+  });
 
+  const [loading, setLoading] = useState<boolean>(false);
 
-export default function AddEditModal({ isOpen, onClose, task, onTaskSaved}:AddEditModalProps){
-    const [formData, setFormData] = useState({
-        title: '',
-        description: '',
+  const APIURL = process.env.NEXT_PUBLIC_API_URL;
+
+  useEffect(() => {
+    if (task) {
+      setFormData({
+        title: task.title,
+        description: task.description,
+        isCompleted: task.isCompleted,
+        category: task.category,
+        tags: task.tags || [],
+        priority: task.priority,
+        userId: task.userId,
+      });
+    } else {
+      setFormData({
+        title: "",
+        description: "",
         isCompleted: false,
-        category: '',
-        tags: [] as string[],
+        category: "",
+        tags: [],
         priority: 0,
-        userId: '',
-    })
-
-    const [loading, setLoading]  = useState<boolean>(false);
-
-
-    const APIURL = process.env.NEXT_PUBLIC_API_URL;
-
-    useEffect (()=> {
-        if(task){
-            setFormData({
-                title: task.title,
-                description: task.description,
-                isCompleted: task.isCompleted,
-                category: task.category,
-                tags: task.tags || [],
-                priority: task.priority,
-                userId: task.userId,
-            })
-        }else{
-            setFormData({
-                title: '',
-                description: '',
-                isCompleted: false,
-                category: '',
-                tags: [],
-                priority: 0,
-                userId: '',
-            })
-        }
-    }, [task])
-
-
-    const getToken =  () => {
-        const user = auth.currentUser;
-        if(user){
-            return user.getIdToken();
-        }else{
-            return null;
-        }
+        userId: "",
+      });
     }
+  }, [task]);
 
-    const getUserId = () => {
-        const user = auth.currentUser;
-        if(user){
-            return user.uid;
-        }else{
-            return null;
-        }
+  const getToken = () => {
+    const user = auth.currentUser;
+    if (user) {
+      return user.getIdToken();
+    } else {
+      return null;
     }
+  };
 
+  const getUserId = () => {
+    const user = auth.currentUser;
+    if (user) {
+      return user.uid;
+    } else {
+      return null;
+    }
+  };
 
-    
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
 
+    try {
+      const token = await getToken();
+      const userId = getUserId();
+
+      if (!token || !userId) {
+        toast.error("User not authenticated to do this action");
+        return;
+      }
+
+      const tagsArray = formData.tags
+        .map((tag) => tag.trim())
+        .filter((tag) => tag.length > 0);
+
+      const taskData = {
+        Title: formData.title,
+        Description: formData.description,
+        IsCompleted: formData.isCompleted,
+        Category: formData.category,
+        Tags: tagsArray,
+        Priority: formData.priority,
+        UserId: userId,
+      };
+
+      const res = await axios.post(`${APIURL}/api/Task`, taskData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (res.status === 201) {
+        toast.success("Task added succesfully");
+        onTaskSaved();
+        onClose();
+      } else {
+        toast.error("Failed to add task");
+      }
+    } catch (error: unknown) {
+      console.error("Error submitting form:", error);
+      toast.error("An error occurred while submitting the form");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleInputChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
+  ) => {
+    const { name, value, type } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]:
+        type === "checkbox"
+          ? (e.target as HTMLInputElement).checked
+          : type === "number"
+          ? parseInt(value) || 0
+          : value,
+    }));
+  };
+
+  if (!isOpen) {
+    return null;
+  }
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <Card className="w-full max-w-sm">
+        <CardHeader>
+          <CardTitle>{task ? "Edit Task" : "Add Task"}</CardTitle>
+          <CardDescription>
+            {task ? "Edit your task details" : "Enter details for the new task"}
+          </CardDescription>
+          <CardAction>
+            <Button variant="link" onClick={onClose}>
+              close
+            </Button>
+          </CardAction>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit}>
+            <div className="flex flex-col gap-6">
+              <div className="grid gap-2">
+                <Label htmlFor="title">Title</Label>
+                <Input
+                  id="title"
+                  name="title"
+                  type="text"
+                  placeholder="Task Title"
+                  value={formData.title}
+                  onChange={handleInputChange}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="description">Description</Label>
+                <Input
+                  id="description"
+                  name="description"
+                  type="text"
+                  placeholder="Task Description"
+                  value={formData.description}
+                  onChange={handleInputChange}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="isCompleted">Is Completed</Label>
+                <Input
+                  id="isCompleted"
+                  name="isCompleted"
+                  type="checkbox"
+                  checked={formData.isCompleted}
+                  onChange={handleInputChange}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="category">Category</Label>
+                <select
+                  id="category"
+                  name="category"
+                  value={formData.category}
+                  onChange={handleInputChange}
+                >
+                  <option value="">Select Category</option>
+                  <option value="work">Work</option>
+                  <option value="personal">Personal</option>
+                  <option value="shopping">Shopping</option>
+                  <option value="study">Study</option>
+                  <option value="fitness">Fitness</option>
+                <option value="other">Other</option>
+                </select>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="priority">Priority</Label>
+                <select
+                  id="priority"
+                  name="priority"
+                  value={formData.priority}
+                  onChange={handleInputChange}
+                >
+                  <option value="">Select Priority</option>
+                  <option value="high">High</option>
+                  <option value="medium">Medium</option>
+                  <option value="low">Low</option>
+                </select>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="tags">Tags</Label>
+                <Input
+                  id="tags"
+                  name="tags"
+                  type="text"
+                  placeholder="Enter tags separated by commas"
+                  value={formData.tags.join(", ")}
+                  onChange={handleInputChange}
+                />
+              </div>    
+            </div>
+            <CardFooter className="flex-col gap-2 px-0 pt-6">
+              <Button type="submit" className="w-full" disabled={loading}>
+                {task ? "Save Changes" : "Add Task"}
+                {loading && "Loading..."}
+              </Button>
+            </CardFooter>
+          </form>
+        </CardContent>
+      </Card>
+    </div>
+  );
 }
