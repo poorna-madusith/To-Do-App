@@ -78,7 +78,25 @@ export default function Dashboard() {
     fetchTasks();
   }, [fetchTasks]);
 
+  const handleAddTask = () => {
+    setEditingTask(null);
+    setOpenModal(true);
+  }
 
+  const handleEditTask = (task: Task) => {
+    setEditingTask(task);
+    setOpenModal(true);
+  }
+
+
+  const handleModalClose = () => {
+    setOpenModal(false);
+    setEditingTask(null);
+  }
+
+  const handleTaskSaved = () => {
+    fetchTasks();
+  }
 
   return (
     <ProtectedRoute>
@@ -92,6 +110,12 @@ export default function Dashboard() {
               className="bg-red-500 hover:bg-red-600 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
             >
               Logout
+            </button>
+            <button
+              onClick={handleAddTask}
+              className="bg-red-500 hover:bg-red-600 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+            >
+              Add Task
             </button>
           </div>
           
