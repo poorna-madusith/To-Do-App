@@ -140,6 +140,12 @@ export default function Dashboard() {
                       <span className="text-xs text-gray-500">
                         {new Date(task.createdAt).toLocaleDateString()}
                       </span>
+                      <button 
+                        onClick={() => handleEditTask(task)}
+                        className="text-blue-500 hover:underline text-sm"
+                      >
+                        Edit
+                      </button>
                     </div>
                   </div>
                 ))}

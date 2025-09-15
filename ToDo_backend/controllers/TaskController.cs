@@ -52,11 +52,6 @@ public class TaskController : ControllerBase
 
             var tasks = await _context.Tasks.Where(t => t.UserId == userId).ToListAsync();
 
-            if (tasks == null || !tasks.Any())
-            {
-                return NotFound("No task found!");
-            }
-
             return Ok(tasks);
         }
         catch (Exception ex)
@@ -75,7 +70,11 @@ public class TaskController : ControllerBase
         try
         {
 
-            var userId = HttpContext.Items["UserId"]?.ToString();
+            var userId = User.FindFirst("user_id")?.Value;
+            if (userId == null)
+            {
+                userId = HttpContext.Items["UserId"]?.ToString();
+            }
 
             if (userId == null)
             {
@@ -126,9 +125,10 @@ public class TaskController : ControllerBase
                 return Unauthorized("User not authenticated");
             }
 
+            task.UserId = userId;
             _context.Tasks.Add(task);
             await _context.SaveChangesAsync();
-            return CreatedAtAction(nameof(GetTask), new { id = task.Id, UserId = userId }, task);
+            return CreatedAtAction(nameof(GetTask), new { id = task.Id }, task);
         }
         catch (Exception e)
         {
@@ -154,9 +154,15 @@ public class TaskController : ControllerBase
             }
 
             var userId = User.FindFirst("user_id")?.Value;
+            if (userId == null)
+            {
+                userId = HttpContext.Items["UserId"]?.ToString();
+            }
             
             if (userId == null)
                 return Unauthorized("User not authenticated");
+
+            task.Id = id;
 
             if (id != task.Id)
                 return BadRequest("Id mismatch");
@@ -191,20 +197,24 @@ public class TaskController : ControllerBase
         try
         {
 
-            var userId = HttpContext.Items["UserId"]?.ToString();
+            var userId = User.FindFirst("user_id")?.Value;
+            if (userId == null)
+            {
+                userId = HttpContext.Items["UserId"]?.ToString();
+            }
 
             if (userId == null)
             {
                 return Unauthorized("User not authenticated");
             }
 
-            var exsisting = await _context.Tasks.FirstOrDefaultAsync(t => t.Id == id && t.UserId == userId);
-            if (exsisting == null)
+            var existing = await _context.Tasks.FirstOrDefaultAsync(t => t.Id == id && t.UserId == userId);
+            if (existing == null)
             {
                 return NotFound("Task Not Found!");
             }
 
-            _context.Tasks.Remove(exsisting);
+            _context.Tasks.Remove(existing);
             await _context.SaveChangesAsync();
             return NoContent();
 
@@ -223,7 +233,11 @@ public class TaskController : ControllerBase
         try
         {
 
-            var userId = HttpContext.Items["UserId"]?.ToString();
+            var userId = User.FindFirst("user_id")?.Value;
+            if (userId == null)
+            {
+                userId = HttpContext.Items["UserId"]?.ToString();
+            }
 
             if (userId == null)
             {

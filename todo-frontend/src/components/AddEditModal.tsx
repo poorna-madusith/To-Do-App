@@ -119,6 +119,61 @@ export default function AddEditModal({
     }
   };
 
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    if(!validateForm()){
+      toast.error("Please fix the errors in the form");
+      setLoading(false);
+      return;
+    }
+
+    try{
+      const token = await getToken();
+      const userId = getUserId();
+
+      if(!token || !userId) {
+        toast.error("User not authenticated to do this action");
+        return;
+      }
+
+      const tagsArray = formData.tags
+        .map((tag) => tag.trim())
+        .filter((tag) => tag.length > 0);
+
+      const updatedTaskData = {
+        title: formData.title,
+        description: formData.description,
+        isCompleted: formData.isCompleted,
+        category: formData.category || "other",
+        tags: tagsArray,
+        priority: Number(formData.priority) || 0,
+        userId: userId,
+      };
+
+      const res = await axios.put(`${APIURL}/api/Task/${task?.id}`, updatedTaskData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (res.status === 204) {
+        toast.success("Task updated successfully");
+        onTaskSaved();
+        onClose();
+      } else {
+        toast.error("Failed to update task");
+      }
+    }catch(error: unknown){
+      console.error("Error submitting form:", error);
+      toast.error("An error occurred while submitting the form");
+    }finally{
+      setLoading(false);
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -141,11 +196,6 @@ export default function AddEditModal({
       const tagsArray = formData.tags
         .map((tag) => tag.trim())
         .filter((tag) => tag.length > 0);
-
-      if (!formData.title || !formData.description || !formData.category) {
-        toast.error("Title, description, and category are required");
-        return;
-      }
 
       const taskData = {
         title: formData.title,
@@ -217,7 +267,7 @@ export default function AddEditModal({
           </CardAction>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={task ? handleEditSubmit : handleSubmit}>
             <div className="flex flex-col gap-6">
               <div className="grid gap-2">
                 <Label htmlFor="title">Title</Label>
