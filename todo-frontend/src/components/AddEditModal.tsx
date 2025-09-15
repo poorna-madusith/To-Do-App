@@ -162,8 +162,8 @@ export default function AddEditModal({
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <Card className="w-full max-w-sm">
+    <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50">
+      <Card className="w-full max-w-md mx-4">
         <CardHeader>
           <CardTitle>{task ? "Edit Task" : "Add Task"}</CardTitle>
           <CardDescription>
