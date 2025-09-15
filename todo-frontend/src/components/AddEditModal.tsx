@@ -37,10 +37,45 @@ export default function AddEditModal({
     priority: 0,
     userId: "",
   });
-
+  const [errors, setErrors] = useState<{
+    title?: string;
+    description?: string;
+    category?: string;
+    priority?: string;
+  }>({});
   const [loading, setLoading] = useState<boolean>(false);
 
   const APIURL = process.env.NEXT_PUBLIC_API_URL;
+
+
+
+  const validateForm = () => {
+    const newErrors: {
+      title?: string;
+      description?: string;
+      category?: string;
+      priority?: string;
+    } = {};
+
+    if(!formData.title.trim()) {
+      newErrors.title = "Title is required";
+    }
+
+    if(!formData.description.trim()) {
+      newErrors.description = "Description is required";
+    }
+
+    if(!formData.category.trim()) {
+      newErrors.category = "Category is required";
+    }
+
+    if(formData.priority === 0 || formData.priority === undefined || isNaN(formData.priority)) {
+      newErrors.priority = "Priority is required";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  }
 
   useEffect(() => {
     if (task) {
@@ -87,6 +122,12 @@ export default function AddEditModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+
+    if(!validateForm()) {
+      toast.error("Please fix the errors in the form");
+      setLoading(false);
+      return;
+    }
 
     try {
       const token = await getToken();
@@ -188,6 +229,13 @@ export default function AddEditModal({
                   value={formData.title}
                   onChange={handleInputChange}
                 />
+                {
+                  errors.title && (
+                    <span className="text-red-500 text-sm">
+                    {errors.title}
+                  </span>
+                  )
+                }
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="description">Description</Label>
@@ -199,6 +247,13 @@ export default function AddEditModal({
                   value={formData.description}
                   onChange={handleInputChange}
                 />
+                {
+                  errors.description && (
+                    <span className="text-red-500 text-sm">
+                    {errors.description}
+                  </span>
+                  )
+                }
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="isCompleted">Is Completed</Label>
@@ -226,6 +281,13 @@ export default function AddEditModal({
                   <option value="fitness">Fitness</option>
                 <option value="other">Other</option>
                 </select>
+                {
+                  errors.category && (
+                    <span className="text-red-500 text-sm">
+                    {errors.category}
+                  </span>
+                  )
+                }
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="priority">Priority</Label>
@@ -240,6 +302,13 @@ export default function AddEditModal({
                   <option value="3">Medium</option>
                   <option value="1">Low</option>
                 </select>
+                {
+                  errors.priority && (
+                    <span className="text-red-500 text-sm">
+                    {errors.priority}
+                  </span>
+                  )
+                }
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="tags">Tags</Label>
@@ -255,8 +324,7 @@ export default function AddEditModal({
             </div>
             <CardFooter className="flex-col gap-2 px-0 pt-6">
               <Button type="submit" className="w-full" disabled={loading}>
-                {task ? "Save Changes" : "Add Task"}
-                {loading && "Loading..."}
+                {loading ? "Saving..." : task ? "Save Changes" : "Add Task"}
               </Button>
             </CardFooter>
           </form>
