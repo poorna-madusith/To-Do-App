@@ -143,7 +143,18 @@ public class TaskController : ControllerBase
     {
         try
         {
-            var userId = HttpContext.Items["UserId"]?.ToString();
+
+            var authHeader = Request.Headers["Authorization"].ToString();
+
+
+            if(User?.Identity?.IsAuthenticated != true)
+            {
+                Console.WriteLine("User is not authenticated");
+                return Unauthorized("User is not authenticated");
+            }
+
+            var userId = User.FindFirst("user_id")?.Value;
+            
             if (userId == null)
                 return Unauthorized("User not authenticated");
 
