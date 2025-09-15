@@ -15,7 +15,6 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { on } from "events";
 interface AddEditModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -102,14 +101,19 @@ export default function AddEditModal({
         .map((tag) => tag.trim())
         .filter((tag) => tag.length > 0);
 
+      if (!formData.title || !formData.description || !formData.category) {
+        toast.error("Title, description, and category are required");
+        return;
+      }
+
       const taskData = {
-        Title: formData.title,
-        Description: formData.description,
-        IsCompleted: formData.isCompleted,
-        Category: formData.category,
-        Tags: tagsArray,
-        Priority: formData.priority,
-        UserId: userId,
+        title: formData.title,
+        description: formData.description,
+        isCompleted: formData.isCompleted,
+        category: formData.category || "other",
+        tags: tagsArray,
+        priority: Number(formData.priority) || 0,
+        userId: userId,
       };
 
       const res = await axios.post(`${APIURL}/api/Task`, taskData, {
@@ -147,6 +151,8 @@ export default function AddEditModal({
           ? (e.target as HTMLInputElement).checked
           : type === "number"
           ? parseInt(value) || 0
+          : name === "tags"
+          ? value.split(",").map(tag => tag.trim()).filter(tag => tag.length > 0)
           : value,
     }));
   };
@@ -230,9 +236,9 @@ export default function AddEditModal({
                   onChange={handleInputChange}
                 >
                   <option value="">Select Priority</option>
-                  <option value="high">High</option>
-                  <option value="medium">Medium</option>
-                  <option value="low">Low</option>
+                  <option value="5">High</option>
+                  <option value="3">Medium</option>
+                  <option value="1">Low</option>
                 </select>
               </div>
               <div className="grid gap-2">

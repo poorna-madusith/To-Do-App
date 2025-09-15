@@ -52,7 +52,7 @@ builder.Services.AddCors(options =>
               .AllowAnyMethod());
 });
 
-// ✅ Add Controllers, Swagger & API Explorer
+// ✅ Add Controllers and API services
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -72,11 +72,10 @@ if (!app.Environment.IsProduction())
     app.UseHttpsRedirection();
 }
 
-app.UseCors("AllowFrontend");
-
-// ✅ Enable authentication & authorization
-app.UseAuthentication();
-app.UseAuthorization();
+// ✅ Configure middleware in correct order
+app.UseCors("AllowFrontend");  // CORS must come before Auth
+app.UseAuthentication();        // Auth before Authorization
+app.UseAuthorization();        // Authorization before endpoints
 
 app.MapControllers();
 

@@ -54,7 +54,7 @@ export default function Dashboard() {
         toast.error("User not authenticated to do this action");
         return;
       }
-      const response = await axios.get(`${APIURL}/api/Task/${userId}`, {
+      const response = await axios.get(`${APIURL}/api/Task`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
