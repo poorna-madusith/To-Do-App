@@ -7,6 +7,8 @@ import { useEffect, useState, useCallback } from "react";
 import toast from "react-hot-toast";
 import AddEditModal from "@/components/AddEditModal";
 import NavBar from "@/components/NavBar";
+import { Button } from "@/components/ui/button";
+import { Edit, Trash2 } from "lucide-react";
 
 export default function Dashboard() {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -88,7 +90,7 @@ export default function Dashboard() {
     <ProtectedRoute>
       <NavBar />
       <div className="min-h-screen bg-gray-50 p-6">
-        <div className="max-w-4xl mx-auto">
+        <div className="w-full">
           {/* Header with logout button */}
           <div className="flex justify-between items-center mb-8">
             <button
@@ -100,37 +102,43 @@ export default function Dashboard() {
           </div>
           
           {/* Tasks section */}
-          <div className="bg-white rounded-lg shadow-md p-6">
+          <div>
             <h2 className="text-xl font-semibold text-gray-800 mb-4">Your Tasks</h2>
             {tasks.length > 0 ? (
-              <div className="space-y-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
                 {tasks.map((task) => (
-                  <div key={task.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-sm transition-shadow">
-                    <h3 className="font-medium text-gray-900">{task.title}</h3>
-                    <p className="text-gray-600 text-sm mt-1">{task.description}</p>
-                    <div className="flex items-center justify-between mt-3">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                  <div key={task.id} className="bg-white border border-gray-100 rounded-xl p-6 shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-1 hover:border-gray-200">
+                    <h3 className="font-semibold text-gray-900 text-lg mb-2">{task.title}</h3>
+                    <p className="text-gray-600 text-sm leading-relaxed mb-4">{task.description}</p>
+                    <div className="flex items-center justify-between">
+                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${
                         task.isCompleted 
-                          ? 'bg-green-100 text-green-800' 
-                          : 'bg-yellow-100 text-yellow-800'
+                          ? 'bg-green-100 text-green-800 border border-green-200' 
+                          : 'bg-yellow-100 text-yellow-800 border border-yellow-200'
                       }`}>
                         {task.isCompleted ? 'Completed' : 'Pending'}
                       </span>
-                      <span className="text-xs text-gray-500">
-                        {new Date(task.createdAt).toLocaleDateString()}
+                      <span className="text-xs text-gray-500 font-medium">
+                        Created at: {new Date(task.createdAt).toLocaleDateString()}
                       </span>
-                      <button 
-                        onClick={() => handleEditTask(task)}
-                        className="text-blue-500 hover:underline text-sm"
-                      >
-                        Edit
-                      </button>
-                      <button 
-                        onClick={() => handleDelete(task.id)}
-                        className="text-blue-500 hover:underline text-sm"
-                      >
-                        Delete
-                      </button>
+                      <div className="flex gap-2">
+                        <Button 
+                          onClick={() => handleEditTask(task)}
+                          variant="outline"
+                          size="sm"
+                          className="hover:bg-blue-50 hover:border-blue-300 transition-colors"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          onClick={() => handleDelete(task.id)}
+                          variant="outline"
+                          size="sm"
+                          className="hover:bg-red-50 hover:border-red-300 transition-colors"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 ))}
