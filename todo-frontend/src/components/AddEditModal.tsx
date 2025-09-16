@@ -51,6 +51,7 @@ export default function AddEditModal({
     category?: string;
     priority?: string;
   }>({});
+  const [tagInput, setTagInput] = useState("");
   const [loading, setLoading] = useState<boolean>(false);
 
   const APIURL = process.env.NEXT_PUBLIC_API_URL;
@@ -65,6 +66,7 @@ export default function AddEditModal({
       priority: 0,
       userId: "",
     });
+    setTagInput("");
 
     onClose();
   };
@@ -79,6 +81,14 @@ export default function AddEditModal({
 
     if (!formData.title.trim()) {
       newErrors.title = "Title is required";
+    }
+
+    if(formData.title.length > 50){
+      newErrors.title = "Title cannot exceed 50 characters";
+    }
+
+    if(formData.description.length > 200){
+      newErrors.description = "Description cannot exceed 200 characters";
     }
 
     if (!formData.description.trim()) {
@@ -123,6 +133,7 @@ export default function AddEditModal({
         userId: "",
       });
     }
+    setTagInput("");
   }, [task]);
 
   const getToken = () => {
@@ -270,13 +281,23 @@ export default function AddEditModal({
           ? (e.target as HTMLInputElement).checked
           : type === "number"
           ? parseInt(value) || 0
-          : name === "tags"
-          ? value
-              .split(",")
-              .map((tag) => tag.trim())
-              .filter((tag) => tag.length > 0)
           : value,
     }));
+  };
+
+  const handleTagKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const trimmed = tagInput.trim();
+      if (trimmed && !formData.tags.includes(trimmed)) {
+        setFormData(prev => ({ ...prev, tags: [...prev.tags, trimmed] }));
+        setTagInput("");
+      }
+    }
+  };
+
+  const removeTag = (index: number) => {
+    setFormData(prev => ({ ...prev, tags: prev.tags.filter((_, i) => i !== index) }));
   };
 
   if (!isOpen) {
@@ -405,13 +426,23 @@ export default function AddEditModal({
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="tags">Tags</Label>
+                <p className="text-sm text-muted-foreground">Type a tag and press Enter to add it. Click × to remove.</p>
+                <div className="flex flex-wrap gap-2 mb-2">
+                  {formData.tags.map((tag, index) => (
+                    <span key={index} className="bg-blue-100 text-blue-800 px-2 py-1 rounded flex items-center gap-1">
+                      {tag}
+                      <button type="button" onClick={() => removeTag(index)} className="text-red-500 hover:text-red-700">×</button>
+                    </span>
+                  ))}
+                </div>
                 <Input
-                  id="tags"
-                  name="tags"
+                  id="tagInput"
+                  name="tagInput"
                   type="text"
-                  placeholder="Enter tags separated by commas"
-                  value={formData.tags.join(", ")}
-                  onChange={handleInputChange}
+                  placeholder="Add a tag and press Enter"
+                  value={tagInput}
+                  onChange={(e) => setTagInput(e.target.value)}
+                  onKeyDown={handleTagKeyDown}
                 />
               </div>
             </div>
