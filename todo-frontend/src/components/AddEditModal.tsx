@@ -47,7 +47,19 @@ export default function AddEditModal({
 
   const APIURL = process.env.NEXT_PUBLIC_API_URL;
 
+  const handleOnClose = () => {
+    setFormData({
+      title: "",
+      description: "",
+      isCompleted: false,
+      category: "",
+      tags: [] as string[],
+      priority: 0,
+      userId: "",
+    });
 
+    onClose();
+  };
 
   const validateForm = () => {
     const newErrors: {
@@ -57,25 +69,29 @@ export default function AddEditModal({
       priority?: string;
     } = {};
 
-    if(!formData.title.trim()) {
+    if (!formData.title.trim()) {
       newErrors.title = "Title is required";
     }
 
-    if(!formData.description.trim()) {
+    if (!formData.description.trim()) {
       newErrors.description = "Description is required";
     }
 
-    if(!formData.category.trim()) {
+    if (!formData.category.trim()) {
       newErrors.category = "Category is required";
     }
 
-    if(formData.priority === 0 || formData.priority === undefined || isNaN(formData.priority)) {
+    if (
+      formData.priority === 0 ||
+      formData.priority === undefined ||
+      isNaN(formData.priority)
+    ) {
       newErrors.priority = "Priority is required";
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  }
+  };
 
   useEffect(() => {
     if (task) {
@@ -123,17 +139,17 @@ export default function AddEditModal({
     e.preventDefault();
     setLoading(true);
 
-    if(!validateForm()){
+    if (!validateForm()) {
       toast.error("Please fix the errors in the form");
       setLoading(false);
       return;
     }
 
-    try{
+    try {
       const token = await getToken();
       const userId = getUserId();
 
-      if(!token || !userId) {
+      if (!token || !userId) {
         toast.error("User not authenticated to do this action");
         return;
       }
@@ -152,33 +168,37 @@ export default function AddEditModal({
         userId: userId,
       };
 
-      const res = await axios.put(`${APIURL}/api/Task/${task?.id}`, updatedTaskData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
+      const res = await axios.put(
+        `${APIURL}/api/Task/${task?.id}`,
+        updatedTaskData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
       if (res.status === 204) {
         toast.success("Task updated successfully");
         onTaskSaved();
-        onClose();
+        handleOnClose();
       } else {
         toast.error("Failed to update task");
       }
-    }catch(error: unknown){
+    } catch (error: unknown) {
       console.error("Error submitting form:", error);
       toast.error("An error occurred while submitting the form");
-    }finally{
+    } finally {
       setLoading(false);
     }
-  }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
-    if(!validateForm()) {
+    if (!validateForm()) {
       toast.error("Please fix the errors in the form");
       setLoading(false);
       return;
@@ -217,7 +237,7 @@ export default function AddEditModal({
       if (res.status === 201) {
         toast.success("Task added succesfully");
         onTaskSaved();
-        onClose();
+        handleOnClose();
       } else {
         toast.error("Failed to add task");
       }
@@ -243,7 +263,10 @@ export default function AddEditModal({
           : type === "number"
           ? parseInt(value) || 0
           : name === "tags"
-          ? value.split(",").map(tag => tag.trim()).filter(tag => tag.length > 0)
+          ? value
+              .split(",")
+              .map((tag) => tag.trim())
+              .filter((tag) => tag.length > 0)
           : value,
     }));
   };
@@ -261,7 +284,7 @@ export default function AddEditModal({
             {task ? "Edit your task details" : "Enter details for the new task"}
           </CardDescription>
           <CardAction>
-            <Button variant="link" onClick={onClose}>
+            <Button variant="link" onClick={handleOnClose}>
               close
             </Button>
           </CardAction>
@@ -279,13 +302,9 @@ export default function AddEditModal({
                   value={formData.title}
                   onChange={handleInputChange}
                 />
-                {
-                  errors.title && (
-                    <span className="text-red-500 text-sm">
-                    {errors.title}
-                  </span>
-                  )
-                }
+                {errors.title && (
+                  <span className="text-red-500 text-sm">{errors.title}</span>
+                )}
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="description">Description</Label>
@@ -297,13 +316,11 @@ export default function AddEditModal({
                   value={formData.description}
                   onChange={handleInputChange}
                 />
-                {
-                  errors.description && (
-                    <span className="text-red-500 text-sm">
+                {errors.description && (
+                  <span className="text-red-500 text-sm">
                     {errors.description}
                   </span>
-                  )
-                }
+                )}
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="isCompleted">Is Completed</Label>
@@ -329,15 +346,13 @@ export default function AddEditModal({
                   <option value="shopping">Shopping</option>
                   <option value="study">Study</option>
                   <option value="fitness">Fitness</option>
-                <option value="other">Other</option>
+                  <option value="other">Other</option>
                 </select>
-                {
-                  errors.category && (
-                    <span className="text-red-500 text-sm">
+                {errors.category && (
+                  <span className="text-red-500 text-sm">
                     {errors.category}
                   </span>
-                  )
-                }
+                )}
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="priority">Priority</Label>
@@ -352,13 +367,11 @@ export default function AddEditModal({
                   <option value="3">Medium</option>
                   <option value="1">Low</option>
                 </select>
-                {
-                  errors.priority && (
-                    <span className="text-red-500 text-sm">
+                {errors.priority && (
+                  <span className="text-red-500 text-sm">
                     {errors.priority}
                   </span>
-                  )
-                }
+                )}
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="tags">Tags</Label>
@@ -370,7 +383,7 @@ export default function AddEditModal({
                   value={formData.tags.join(", ")}
                   onChange={handleInputChange}
                 />
-              </div>    
+              </div>
             </div>
             <CardFooter className="flex-col gap-2 px-0 pt-6">
               <Button type="submit" className="w-full" disabled={loading}>
