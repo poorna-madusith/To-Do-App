@@ -5,9 +5,9 @@ import { Task } from "@/types/task";
 import axios from "axios";
 import { useEffect, useState, useCallback } from "react";
 import toast from "react-hot-toast";
-import { signOut } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import AddEditModal from "@/components/AddEditModal";
+import NavBar from "@/components/NavBar";
 
 export default function Dashboard() {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -34,16 +34,7 @@ export default function Dashboard() {
     }
   };
 
-  const handleLogout = async () => {
-    try {
-      await signOut(auth);
-      toast.success("Logged out successfully");
-      router.push("/signin");
-    } catch (error) {
-      console.error("Logout error:", error);
-      toast.error("Failed to logout");
-    }
-  };
+  
 
   const handleDelete = async (taskId: number) => {
     const token  = await getToken();
@@ -127,17 +118,11 @@ export default function Dashboard() {
 
   return (
     <ProtectedRoute>
+      <NavBar />
       <div className="min-h-screen bg-gray-50 p-6">
         <div className="max-w-4xl mx-auto">
           {/* Header with logout button */}
           <div className="flex justify-between items-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-            <button
-              onClick={handleLogout}
-              className="bg-red-500 hover:bg-red-600 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
-            >
-              Logout
-            </button>
             <button
               onClick={handleAddTask}
               className="bg-red-500 hover:bg-red-600 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
