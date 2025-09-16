@@ -45,6 +45,32 @@ export default function Dashboard() {
     }
   };
 
+  const handleDelete = async (taskId: number) => {
+    const token  = await getToken();
+    if(!token){
+      toast.error("User not authenticated to do this action");
+      return;
+    }
+
+    try{
+      const res = await axios.delete(`${APIURL}/api/Task/${taskId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+
+      if(res.status === 204){
+        toast.success("Task deleted successfully");
+        fetchTasks();
+      }
+
+    }catch(error: unknown){
+      console.error("Delete error:", error);
+      toast.error("Failed to delete task");
+    }
+  }
+
   const fetchTasks = useCallback(async () => {
     try {
       const token = await getToken();
@@ -145,6 +171,12 @@ export default function Dashboard() {
                         className="text-blue-500 hover:underline text-sm"
                       >
                         Edit
+                      </button>
+                      <button 
+                        onClick={() => handleDelete(task.id)}
+                        className="text-blue-500 hover:underline text-sm"
+                      >
+                        Delete
                       </button>
                     </div>
                   </div>
