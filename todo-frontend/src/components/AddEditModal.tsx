@@ -15,6 +15,14 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 interface AddEditModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -324,30 +332,44 @@ export default function AddEditModal({
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="isCompleted">Is Completed</Label>
-                <Input
-                  id="isCompleted"
-                  name="isCompleted"
-                  type="checkbox"
-                  checked={formData.isCompleted}
-                  onChange={handleInputChange}
-                />
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="isCompleted"
+                    name="isCompleted"
+                    checked={formData.isCompleted}
+                    onCheckedChange={(checked) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        isCompleted: checked as boolean,
+                      }))
+                    }
+                  />
+                  <Label htmlFor="isCompleted" className="text-sm font-normal">
+                    Mark as completed
+                  </Label>
+                </div>
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="category">Category</Label>
-                <select
-                  id="category"
-                  name="category"
+                <Select
+                  key={formData.category}
                   value={formData.category}
-                  onChange={handleInputChange}
+                  onValueChange={(value) =>
+                    setFormData((prev) => ({ ...prev, category: value }))
+                  }
                 >
-                  <option value="">Select Category</option>
-                  <option value="work">Work</option>
-                  <option value="personal">Personal</option>
-                  <option value="shopping">Shopping</option>
-                  <option value="study">Study</option>
-                  <option value="fitness">Fitness</option>
-                  <option value="other">Other</option>
-                </select>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select Category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="work">Work</SelectItem>
+                    <SelectItem value="personal">Personal</SelectItem>
+                    <SelectItem value="shopping">Shopping</SelectItem>
+                    <SelectItem value="study">Study</SelectItem>
+                    <SelectItem value="fitness">Fitness</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
                 {errors.category && (
                   <span className="text-red-500 text-sm">
                     {errors.category}
@@ -356,17 +378,25 @@ export default function AddEditModal({
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="priority">Priority</Label>
-                <select
-                  id="priority"
-                  name="priority"
-                  value={formData.priority}
-                  onChange={handleInputChange}
+                <Select
+                  key={formData.priority}
+                  value={formData.priority.toString()}
+                  onValueChange={(value) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      priority: parseInt(value) || 0,
+                    }))
+                  }
                 >
-                  <option value="">Select Priority</option>
-                  <option value="5">High</option>
-                  <option value="3">Medium</option>
-                  <option value="1">Low</option>
-                </select>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select Priority" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="5">High</SelectItem>
+                    <SelectItem value="3">Medium</SelectItem>
+                    <SelectItem value="1">Low</SelectItem>
+                  </SelectContent>
+                </Select>
                 {errors.priority && (
                   <span className="text-red-500 text-sm">
                     {errors.priority}
