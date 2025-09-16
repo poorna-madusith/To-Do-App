@@ -1,11 +1,10 @@
 'use client';
 import { ProtectedRoute } from "@/components/ProtectedRoute";
-import { auth } from "@/lib/firebase";
+import { useAuthContext } from "@/context/AuthContext";
 import { Task } from "@/types/task";
-import axios from "axios";
+import api from "@/lib/axios";
 import { useEffect, useState, useCallback } from "react";
 import toast from "react-hot-toast";
-import { useRouter } from "next/navigation";
 import AddEditModal from "@/components/AddEditModal";
 import NavBar from "@/components/NavBar";
 
@@ -13,44 +12,19 @@ export default function Dashboard() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [openModel, setOpenModal] = useState<boolean>(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
-  const router = useRouter();
+  const { user, loading } = useAuthContext();
   const APIURL = process.env.NEXT_PUBLIC_API_URL;
-
-  const getToken = () => {
-    const user = auth.currentUser;
-    if (user) {
-      return user.getIdToken();
-    } else {
-      return null;
-    }
-  };
-
-  const getUserID = () => {
-    const user = auth.currentUser;
-    if (user) {
-      return user.uid;
-    } else {
-      return null;
-    }
-  };
 
   
 
   const handleDelete = async (taskId: number) => {
-    const token  = await getToken();
-    if(!token){
+    if (!user) {
       toast.error("User not authenticated to do this action");
       return;
     }
 
     try{
-      const res = await axios.delete(`${APIURL}/api/Task/${taskId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-
+      const res = await api.delete(`${APIURL}/api/Task/${taskId}`);
       if(res.status === 204){
         toast.success("Task deleted successfully");
         fetchTasks();
@@ -63,20 +37,12 @@ export default function Dashboard() {
   }
 
   const fetchTasks = useCallback(async () => {
+    if (!user) {
+      toast.error("User not authenticated to do this action");
+      return;
+    }
     try {
-      const token = await getToken();
-      console.log("Fetched token:", token);
-      const userId = getUserID();
-      if (!token || !userId) {
-        toast.error("User not authenticated to do this action");
-        return;
-      }
-      const response = await axios.get(`${APIURL}/api/Task`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
+      const response = await api.get(`${APIURL}/api/Task`);
       if (response.status === 200) {
         setTasks(response.data);
         console.log(response.data);
@@ -90,11 +56,13 @@ export default function Dashboard() {
         toast.error("An unknown error occurred");
       }
     }
-  }, [APIURL]);
+  }, [user, APIURL]);
 
   useEffect(() => {
-    fetchTasks();
-  }, [fetchTasks]);
+    if (!loading && user) {
+      fetchTasks();
+    }
+  }, [fetchTasks, loading, user]);
 
   const handleAddTask = () => {
     setEditingTask(null);
