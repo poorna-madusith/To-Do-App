@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ToDo_backend.context;
 using ToDo_backend.models;
+using FirebaseAdmin.Auth;
+using System.Collections.Generic;
 
 namespace ToDo_backend.controllers;
 
@@ -47,6 +49,10 @@ public class UserController : ControllerBase
 
             _context.Users.Add(newuser);
             await _context.SaveChangesAsync();
+
+            // Set custom claim for the user
+            await FirebaseAuth.DefaultInstance.SetCustomUserClaimsAsync(newuser.UserId, new Dictionary<string, object> { { "user_id", newuser.UserId } });
+
             return Ok(newuser);
         }
         catch (Exception ex)
