@@ -9,9 +9,6 @@ var builder = WebApplication.CreateBuilder(args);
 // ✅ Load environment variables from .env file
 DotNetEnv.Env.Load();
 
-// ✅ Initialize Firebase Admin SDK
-ToDo_backend.Helpers.FireBaseHelper.Initialize();
-
 // ✅ Build connection string dynamically from .env variables
 var connectionString = $"server={Environment.GetEnvironmentVariable("AIVEN_HOST")};" +
                        $"port={Environment.GetEnvironmentVariable("AIVEN_PORT")};" +
