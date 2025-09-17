@@ -38,6 +38,7 @@ public class TaskController : ControllerBase
             Console.WriteLine($"Authenticated User ID: {userId}");
         }
 
+        Console.WriteLine($"Authenticated User ID: {userId}");
         return userId;
     }
 
