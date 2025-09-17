@@ -44,18 +44,29 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 
 // ✅ Allow CORS for frontend
+// ✅ Allow CORS for frontend (dynamic based on env)
 builder.Services.AddCors(options =>
 {
+    var frontendUrl = Environment.GetEnvironmentVariable("FRONTEND_URL") 
+                      ?? "http://localhost:3000";
+
     options.AddPolicy("AllowFrontend", policy =>
-        policy.WithOrigins("http://localhost:3000")
+        policy.WithOrigins(frontendUrl)
               .AllowAnyHeader()
               .AllowAnyMethod());
 });
+
+
 
 // ✅ Add Controllers and API services
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+
+// ✅ Bind Kestrel to Railway PORT
+var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+builder.WebHost.UseUrls($"http://*:{port}");
 
 var app = builder.Build();
 
@@ -66,11 +77,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-// ✅ Use HTTPS redirection only in development
-if (!app.Environment.IsProduction())
-{
-    app.UseHttpsRedirection();
-}
+
 
 // ✅ Configure middleware in correct order
 app.UseCors("AllowFrontend");  // CORS must come before Auth
