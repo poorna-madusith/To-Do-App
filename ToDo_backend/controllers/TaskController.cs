@@ -38,7 +38,7 @@ public class TaskController : ControllerBase
                 return Unauthorized("User is not authenticated");
             }
 
-            var userId = User.FindFirst("sub")?.Value;
+            var userId = User.FindFirst("user_id")?.Value;
             if (userId == null)
             {
                 userId = HttpContext.Items["UserId"]?.ToString();
@@ -70,7 +70,7 @@ public class TaskController : ControllerBase
         try
         {
 
-            var userId = User.FindFirst("sub")?.Value;
+            var userId = User.FindFirst("user_id")?.Value;
             if (userId == null)
             {
                 userId = HttpContext.Items["UserId"]?.ToString();
@@ -113,7 +113,7 @@ public class TaskController : ControllerBase
                 return Unauthorized("User is not authenticated");
             }
 
-            var userId = User.FindFirst("sub")?.Value;
+            var userId = User.FindFirst("user_id")?.Value;
             if (userId == null)
             {
                 userId = HttpContext.Items["UserId"]?.ToString();
@@ -153,7 +153,7 @@ public class TaskController : ControllerBase
                 return Unauthorized("User is not authenticated");
             }
 
-            var userId = User.FindFirst("sub")?.Value;
+            var userId = User.FindFirst("user_id")?.Value;
             if (userId == null)
             {
                 userId = HttpContext.Items["UserId"]?.ToString();
@@ -197,7 +197,7 @@ public class TaskController : ControllerBase
         try
         {
 
-            var userId = User.FindFirst("sub")?.Value;
+            var userId = User.FindFirst("user_id")?.Value;
             if (userId == null)
             {
                 userId = HttpContext.Items["UserId"]?.ToString();
@@ -233,7 +233,7 @@ public class TaskController : ControllerBase
         try
         {
 
-            var userId = User.FindFirst("sub")?.Value;
+            var userId = User.FindFirst("user_id")?.Value;
             if (userId == null)
             {
                 userId = HttpContext.Items["UserId"]?.ToString();
