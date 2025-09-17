@@ -32,9 +32,6 @@ public class TaskController : ControllerBase
             var authHeader = Request.Headers["Authorization"].ToString();
             Console.WriteLine($"Auth Header: {authHeader}");
             
-            var claims = User.Claims.Select(c => $"{c.Type}: {c.Value}").ToList();
-            Console.WriteLine("Claims: " + string.Join(", ", claims));
-            
             if (User?.Identity?.IsAuthenticated != true)
             {
                 Console.WriteLine("User is not authenticated");
@@ -42,6 +39,10 @@ public class TaskController : ControllerBase
             }
 
             var userId = User.FindFirst("user_id")?.Value;
+            if (userId == null)
+            {
+                userId = HttpContext.Items["UserId"]?.ToString();
+            }
             Console.WriteLine($"Authenticated User ID: {userId}");
 
             if (userId == null)
