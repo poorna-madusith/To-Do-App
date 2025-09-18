@@ -33,15 +33,7 @@ A modern, full-stack to-do application built with ASP.NET Core backend and Next.
 - **Containerization**: Docker & Docker Compose
 - **Deployment**: Netlify (Frontend), Railway/Aiven (Backend)
 
-## � Deployment
-
-The application is deployed with the following configuration:
-
-- **Frontend**: Deployed on [Netlify](https://luminous-blini-dfc928.netlify.app/)
-- **Backend**: Deployed on [Railway](https://to-do-app-production-016d.up.railway.app/) using Docker containers
-- **Live Demo**: [https://luminous-blini-dfc928.netlify.app/signin](https://luminous-blini-dfc928.netlify.app/signin)
-
-## �📋 Prerequisites
+## 📋 Prerequisites
 
 Before running this application, make sure you have the following installed:
 
